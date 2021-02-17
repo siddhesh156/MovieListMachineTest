@@ -22,4 +22,5 @@ struct Movies {
     var imgUrl: String
     var bgImgUrl: String
     }
+    
 }

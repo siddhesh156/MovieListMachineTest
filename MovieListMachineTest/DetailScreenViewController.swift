@@ -25,7 +25,7 @@ class DetailScreenViewController: UIViewController {
       self.synopsis.text = Global.movies[index].synopsis
       self.rating.text = "\(Global.movies[index].rating)"
       self.releaseDate.text = Global.movies[index].releaseDate
-      let url = URL(string:Global.imgUrl + Global.movies[index].bgImgUrl)
+      let url = URL(string:Global.imgUrl + "\(Global.movies[index].bgImgUrl)")
       let data = try? Data(contentsOf: url!)
       movieImg.image = UIImage(data: data!)
         

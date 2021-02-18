@@ -13,12 +13,14 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
     
     @IBOutlet weak var tableViewTest: UITableView!
     @IBOutlet weak var searchBar: UISearchBar!
+    var currentPage = 1
+    var isDataLoading:Bool=false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         searchBar.delegate = self
-        fetchMovies()
+        fetchMovies(pgNo: 1)
     }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String)
@@ -52,7 +54,6 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
         var data = try? Data(contentsOf: url!)
         cell.imgView.image = UIImage(data: data ?? Data())
         
-        
         return cell
     }
     
@@ -62,9 +63,10 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
         self.present(vc, animated: true, completion: nil)
     }
     
-    func fetchMovies(){
+    func fetchMovies(pgNo: Int){
+        
         let apiKey = "2c0a8efe934c162f5535ff33303e70bd"
-        let url = NSURL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)&page=1")
+        let url = NSURL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)&page=\(pgNo)")
         let request = URLRequest(url: url! as URL, cachePolicy: NSURLRequest.CachePolicy.reloadIgnoringCacheData, timeoutInterval: 10)
         let session = URLSession(
             configuration: URLSessionConfiguration.default, delegate: nil, delegateQueue: OperationQueue.main
@@ -73,16 +75,17 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
             if let data = dataOrNil {
                 if let responseDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary{print("response: \(responseDictionary)")
                     let results = responseDictionary["results"] as? [NSDictionary]
+                                     
+                    Global.movies.removeAll()
                     
-                     Global.movies.removeAll()
                   
                     for element in results!{
                         
-                        let movie = Movies.Movie(title: element.object(forKey: "original_title") as! String, synopsis: element.object(forKey: "overview") as! String, rating: element.object(forKey: "vote_average") as! NSNumber, releaseDate: element.object(forKey: "release_date") as! String, imgUrl: element.object(forKey: "poster_path") as! String, bgImgUrl: element.object(forKey: "backdrop_path") as! String)
+                    let movie = Movies.Movie(title: element.object(forKey: "original_title") as? String ?? "", synopsis: element.object(forKey: "overview") as? String ?? "", rating: element.object(forKey: "vote_average") as? NSNumber ?? 0, releaseDate: element.object(forKey: "release_date") as? String ?? "", imgUrl: element.object(forKey: "poster_path") as? String ?? "", bgImgUrl: element.object(forKey: "backdrop_path") as? String ?? "")
                         Global.movies.append(movie)
                     }
                     
-                   // print("movies list ", Global.movies)
+                   print("movies count ", Global.movies.count)
                     
                    
                     self.tableViewTest.reloadData()
@@ -129,6 +132,44 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
             
         })
         task.resume()
+    }
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        
+        print("scrollViewWillBeginDragging")
+        isDataLoading = false
+    }
+    
+    
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        print("scrollViewDidEndDecelerating")
+    }
+    //Pagination
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        
+        print("scrollViewDidEndDragging")
+        if ((tableViewTest.contentOffset.y + tableViewTest.frame.size.height) >= tableViewTest.contentSize.height)
+        {
+            if !isDataLoading{
+                isDataLoading = true
+                self.currentPage=self.currentPage+1
+                fetchMovies(pgNo: self.currentPage)
+            }
+        }
+        else if ((tableViewTest.contentOffset.y + tableViewTest.frame.size.height) <= tableViewTest.contentSize.height)
+        {
+            if !isDataLoading{
+                if(self.currentPage>1){
+                isDataLoading = true
+                self.currentPage=self.currentPage-1
+                fetchMovies(pgNo: self.currentPage)
+                }
+                print("pg no",self.currentPage)
+            }
+        }
+        
+        
     }
 }
 

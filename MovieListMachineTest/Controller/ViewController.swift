@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MBProgressHUD
 
 class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate {
     
@@ -50,8 +51,8 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
         let movie =  Global.movies[indexPath.row]
         
         cell.title.text = movie.title
-        var url = URL(string:Global.imgUrl + movie.imgUrl)
-        var data = try? Data(contentsOf: url!)
+        let url = URL(string:Global.imgUrl + movie.imgUrl)
+        let data = try? Data(contentsOf: url!)
         cell.imgView.image = UIImage(data: data ?? Data())
         
         return cell
@@ -64,6 +65,10 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
     }
     
     func fetchMovies(pgNo: Int){
+        let loadingNotification = MBProgressHUD.showAdded(to: view, animated: true)
+        loadingNotification.mode = MBProgressHUDMode.indeterminate
+        loadingNotification.label.text = "Loading"
+        
         
         let apiKey = "2c0a8efe934c162f5535ff33303e70bd"
         let url = NSURL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)&page=\(pgNo)")
@@ -87,10 +92,14 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
                     
                    print("movies count ", Global.movies.count)
                     
-                   
+                    MBProgressHUD.hide(for: self.view, animated: true)
+                    
                     self.tableViewTest.reloadData()
                     
                 }
+            }
+            else{
+                 MBProgressHUD.hide(for: self.view, animated: true)
             }
             
         })
@@ -98,6 +107,10 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
     }
     
     func searchMovies(keyword: String){
+        let loadingNotification = MBProgressHUD.showAdded(to: view, animated: true)
+        loadingNotification.mode = MBProgressHUDMode.indeterminate
+        loadingNotification.label.text = "Loading"
+        
         let apiKey = "2c0a8efe934c162f5535ff33303e70bd"
         let originalString = "https://api.themoviedb.org/3/search/movie?api_key=\(apiKey)&query=\(keyword)&page=1"
         let urlString = originalString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
@@ -124,10 +137,13 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
                     
                     print("movies list count ", Global.movies.count)
                     
-                    
+                    MBProgressHUD.hide(for: self.view, animated: true)
                     self.tableViewTest.reloadData()
                     
                 }
+            }
+            else{
+                MBProgressHUD.hide(for: self.view, animated: true)
             }
             
         })
